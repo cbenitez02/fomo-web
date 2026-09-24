@@ -167,6 +167,17 @@ $mono: 'Space Mono', monospace;
   text-align: center;
 }
 
+.slot img,
+.shop-card-media img,
+.cart-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .sold {
   position: absolute;
   inset: 0;
@@ -315,6 +326,12 @@ $mono: 'Space Mono', monospace;
   padding: clamp(24px, 4vw, 40px) 4vw clamp(60px, 10vw, 100px);
   position: relative;
   isolation: isolate;
+}
+
+.cat-status {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
 }
 
 .cat-grid {
@@ -802,9 +819,21 @@ $mono: 'Space Mono', monospace;
 .pdp-thumb {
   aspect-ratio: 1 / 1;
   border: 3px solid $ink;
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   &.hot {
     box-shadow: 4px 4px 0 $red;
   }
+}
+
+.pdp-status {
+  padding: clamp(24px, 4vw, 40px) 4vw 0;
 }
 
 .pdp-info {

@@ -6,6 +6,7 @@ import { ProductPage } from './shop/product/product';
 export const routes: Routes = [
   { path: '', component: Landing },
   { path: 'catalogo', component: CatalogPage },
-  { path: 'producto/:id', component: ProductPage },
+  { path: 'products/:slug', component: ProductPage },
+  { path: 'producto/:slug', redirectTo: '/products/:slug' },
   { path: '**', redirectTo: '' },
 ];

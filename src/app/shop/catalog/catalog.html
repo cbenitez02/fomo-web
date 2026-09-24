@@ -28,9 +28,17 @@
   </section>
 
   <section class="cat-grid-wrap" data-screen-label="Grilla" data-sp="7">
-    @if (items().length) {
+    @if (status() === 'loading') {
+      <p class="cat-status">CARGANDO CATÁLOGO.</p>
+    } @else if (status() === 'error') {
+      <p class="cat-status">{{ failed() }}</p>
+    } @else if (emptyKind() === 'catalog') {
+      <p class="cat-status">TODAVÍA NO HAY PRODUCTOS.</p>
+    } @else if (emptyKind() === 'filters') {
+      <p class="cat-status">NINGÚN PRODUCTO CON ESTOS FILTROS.</p>
+    } @else if (items().length) {
       <div class="cat-grid">
-        @for (p of items(); track p.id) {
+        @for (p of items(); track p.slug) {
           <article class="shop-card">
             <div class="card-meta">
               <span>N°{{ p.num }}</span>
@@ -38,8 +46,12 @@
                 <span class="tag">{{ p.tag }}</span>
               }
             </div>
-            <a class="shop-card-media slot slot-light" [routerLink]="['/producto', p.id]">
-              <span class="slot-label">{{ p.name }}</span>
+            <a class="shop-card-media slot slot-light" [routerLink]="['/products', p.slug]">
+              @if (p.imageUrl) {
+                <img [src]="p.imageUrl" [alt]="p.imageAlt" />
+              } @else {
+                <span class="slot-label">{{ p.name }}</span>
+              }
               @if (p.soldOut) {
                 <div class="sold">
                   <div class="sold-stamp" [style.-webkit-mask-image]="soldMask" [style.mask-image]="soldMask">
@@ -56,15 +68,15 @@
               </div>
             </div>
             @if (p.soldOut) {
-              <a class="ver-producto shop-card-foot sold-only" [routerLink]="['/producto', p.id]">
+              <a class="ver-producto shop-card-foot sold-only" [routerLink]="['/products', p.slug]">
                 <span>VER PRODUCTO</span><span>→</span>
               </a>
             } @else {
               <div class="shop-card-foot">
-                <a class="ver-producto" [routerLink]="['/producto', p.id]">
+                <a class="ver-producto" [routerLink]="['/products', p.slug]">
                   <span>VER PRODUCTO</span><span>→</span>
                 </a>
-                <button type="button" class="add-btn" (click)="addToCart(p.id)" aria-label="Agregar al carrito">+</button>
+                <button type="button" class="add-btn" (click)="addToCart(p)" aria-label="Agregar al carrito">+</button>
               </div>
             }
           </article>
@@ -74,9 +86,9 @@
   </section>
 
   <div class="shop-foot">
-    <span>RESPONDEMOS EN EL DÍA</span>
+    <span>{{ responseSla() }}</span>
     <a routerLink="/">← VOLVER AL INICIO</a>
-    <span>© 2026 FOMO</span>
+    <span>{{ copyrightLine() }}</span>
   </div>
   <fomo-flaaps />
 
@@ -112,10 +124,10 @@
         <input
           class="price-range"
           type="range"
-          [min]="priceMin"
-          [max]="priceMax"
-          [step]="priceStep"
-          [value]="maxPrice()"
+          [min]="priceMin()"
+          [max]="priceMax()"
+          [step]="priceStep()"
+          [value]="sliderValue()"
           (input)="onMaxPrice($event)"
         />
       </div>

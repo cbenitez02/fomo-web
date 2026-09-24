@@ -2,18 +2,20 @@ import { fillMarquee, sparkLayer } from '../landing/engine';
 
 export function bindShopFx(root: HTMLElement) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const animations: Animation[] = [];
+  const shineAnims: Animation[] = [];
+  const marqueeAnims: Animation[] = [];
   let sparkTimer: ReturnType<typeof setTimeout> | undefined;
   let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   const startMarquees = () => {
+    marqueeAnims.splice(0).forEach((a) => a.cancel());
     root.querySelectorAll<HTMLElement>('[data-marquee]').forEach((el) => {
       fillMarquee(el);
       if (reduced) return;
       el.getAnimations().forEach((a) => a.cancel());
       const half = el.scrollWidth / 2;
       const duration = Math.max(8000, half * 16);
-      animations.push(
+      marqueeAnims.push(
         el.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${-half}px)` }], {
           duration,
           iterations: Infinity,
@@ -30,7 +32,7 @@ export function bindShopFx(root: HTMLElement) {
       if ((el as HTMLElement & { _shined?: boolean })._shined) return;
       (el as HTMLElement & { _shined?: boolean })._shined = true;
       const card = el.dataset['shine'] === 'card';
-      animations.push(
+      shineAnims.push(
         el.animate(
           card
             ? [{ backgroundPosition: '150% 0, 0 0' }, { backgroundPosition: '-50% 0, 0 0' }]
@@ -71,12 +73,14 @@ export function bindShopFx(root: HTMLElement) {
 
   return {
     applyShine,
+    restartMarquees: startMarquees,
     rebuildSparks: () => {
       clearTimeout(sparkTimer);
       sparkTimer = setTimeout(() => buildSparkles(), 60);
     },
     stop() {
-      animations.forEach((a) => a.cancel());
+      shineAnims.forEach((a) => a.cancel());
+      marqueeAnims.forEach((a) => a.cancel());
       clearTimeout(sparkTimer);
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', onResize);

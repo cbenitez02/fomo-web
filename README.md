@@ -1,59 +1,59 @@
-# Fomo
+# Fomo (tienda pública)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.37.
+Angular 20. Consume **solo** `GET /api/public` del API de `fomo-admin-panel`. Sin JWT, sin `/api/admin`, sin secretos de admin.
 
-## Development server
+Contratos: `fomo-admin-panel/docs/public-api.md`. Configuración: `fomo-admin-panel/docs/production.md`. Docker del VPS: `fomo-admin-panel/docs/deployment.md`.
 
-To start a local development server, run:
+## Development
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+API local + proxy. No hace falta tocar TypeScript.
 
 ```bash
-ng generate component component-name
+# en fomo-admin-panel
+npm run dev:api
+
+# en fomo-web
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+`ng serve` abre `http://localhost:4200/`. `proxy.conf.js` reenvía `/api` y `/uploads` a `FOMO_API_ORIGIN` (default `http://127.0.0.1:3000`).
+
+`src/environments/environment.development.ts` y `public/config.json` usan rutas relativas (`/api/public`).
+
+## Lookbook
+
+El collage de Home tiene **6 slots fijos** (`look-1` … `look-6`). El API devuelve todos los looks `published` ordenados por `sort_order`. La web usa los **primeros 6**. Con 0–5, los huecos quedan vacíos. Con más de 6, el resto no se muestra (siguen en admin).
+
+## Production
 
 ```bash
-ng generate --help
+npm run build
 ```
 
-## Building
+Artefactos en `dist/`. **No** hardcodear el host de la API en el source.
 
-To build the project run:
+La imagen Docker (`Dockerfile`) compila este build y Nginx sirve el resultado. Al arrancar, el entrypoint escribe `/config.json` desde `API_BASE_URL` y `ASSET_BASE_URL`. Cambiar de ambiente no recompila Angular.
+
+Fuera de Docker, copiar `config.production.example.json` sobre el `config.json` del dist (o reemplazar `public/config.json` antes del build):
+
+```json
+{
+  "apiBaseUrl": "https://api.example.com/api/public",
+  "assetBaseUrl": "https://api.example.com"
+}
+```
+
+Same-origin (reverse proxy que sirve la web y `/api` + `/uploads`): dejar `apiBaseUrl: "/api/public"` y `assetBaseUrl: ""`.
+
+`/uploads/products/x.webp` se resuelve contra `assetBaseUrl` (host del API), no contra el dominio de la tienda. Si la página es HTTPS, las URLs HTTP se suben a HTTPS.
+
+## Uploads y mixed content
+
+La API puede devolver paths relativos. `resolveAssetUrl` los une al origin del API. En split-host hay que setear `assetBaseUrl` o un `apiBaseUrl` absoluto.
+
+## Tests
 
 ```bash
-ng build
+npx ng test --watch=false --browsers=ChromeHeadless
 ```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

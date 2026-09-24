@@ -4,7 +4,11 @@
   <section class="hero" data-screen-label="Hero">
     <div class="hero-meta">
       <span>ANILLOS &amp; COLLARES</span>
-      <span>ROSARIO — ARG</span>
+      @if (failed()) {
+        <span>{{ failed() }}</span>
+      } @else {
+        <span>{{ locationLine() }}</span>
+      }
     </div>
 
     <div class="hero-title">
@@ -28,8 +32,10 @@
   <section class="band band-1" data-screen-label="Banda 1">
     <div class="band-inner band-inner-dark">
       <div class="marquee display-64" data-marquee="1.8">
-        <span>ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕ ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕</span>
-        <span>ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕ ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕</span>
+        @if (band1Text()) {
+          <span>{{ band1Text() }}</span>
+          <span>{{ band1Text() }}</span>
+        }
       </div>
     </div>
     <div class="chain-layer" data-cross="0.2,0.8"></div>
@@ -48,14 +54,20 @@
     </div>
 
     <div class="ring-grid">
-      @for (r of catalog.rings; track r.num) {
+      @for (r of rings(); track r.slug) {
         <article class="product-card">
           <div class="card-meta">
             <span>N°{{ r.num }}</span>
-            <span class="tag">{{ r.tag }}</span>
+            @if (r.tag) {
+              <span class="tag">{{ r.tag }}</span>
+            }
           </div>
           <div class="slot slot-light">
-            <span class="slot-label">{{ r.ph }}</span>
+            @if (r.imageUrl) {
+              <img [src]="r.imageUrl" [alt]="r.name" />
+            } @else {
+              <span class="slot-label">{{ r.name }}</span>
+            }
             @if (r.soldOut) {
               <div class="sold">
                 <div class="sold-stamp" [style.-webkit-mask-image]="soldMask" [style.mask-image]="soldMask">
@@ -66,7 +78,7 @@
           </div>
           <div class="card-info">
             <h3>{{ r.name }}</h3>
-            <span>{{ r.price }}</span>
+            <span>{{ r.priceLabel }}</span>
           </div>
           <a class="card-cta" [href]="r.wa" target="_blank" rel="noopener">
             <span>{{ r.cta }}</span><span>→</span>
@@ -95,28 +107,44 @@
       <div #trackEl class="track" (pointerdown)="dragStart($event)">
         <div class="intro-card">
           <p>Cadenas que se escuchan antes de verse.</p>
-          <span>6 MODELOS — TIRADA CORTA</span>
+          <span>{{ necklaces().length }} MODELOS — TIRADA CORTA</span>
         </div>
-        @for (n of catalog.necklaces; track n.num) {
+        @for (n of necklaces(); track n.slug) {
           <article class="neck-card">
             <div class="neck-meta">
-              <span>N°{{ n.num }}</span><span>{{ n.tag }}</span>
+              <span>N°{{ n.num }}</span>
+              @if (n.tag) {
+                <span>{{ n.tag }}</span>
+              }
             </div>
             <div class="slot slot-dark neck-photo">
-              <span class="slot-label">{{ n.ph }}</span>
+              @if (n.imageUrl) {
+                <img [src]="n.imageUrl" [alt]="n.name" />
+              } @else {
+                <span class="slot-label">{{ n.name }}</span>
+              }
+              @if (n.soldOut) {
+                <div class="sold">
+                  <div class="sold-stamp" [style.-webkit-mask-image]="soldMask" [style.mask-image]="soldMask">
+                    <div class="sold-text">SOLD OUT</div>
+                  </div>
+                </div>
+              }
             </div>
             <div class="neck-info">
               <h3>{{ n.name }}</h3>
-              <span>{{ n.price }}</span>
+              <span>{{ n.priceLabel }}</span>
             </div>
             <a class="neck-cta" [href]="n.wa" target="_blank" rel="noopener">
-              <span>LO QUIERO</span><span>→</span>
+              <span>{{ n.cta }}</span><span>→</span>
             </a>
           </article>
         }
-        <a class="ig-card" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="card">
-          <span class="ig-card-text" data-shine="text">VER TODO EN IG ↗</span>
-        </a>
+        @if (igHref()) {
+          <a class="ig-card" [href]="igHref()" target="_blank" rel="noopener" data-shine="card">
+            <span class="ig-card-text" data-shine="text">VER TODO EN IG ↗</span>
+          </a>
+        }
       </div>
       <div class="progress">
         <div #barEl class="progress-bar"></div>
@@ -126,36 +154,79 @@
 
   <section class="featured" data-screen-label="Destacado">
     <div class="featured-photo">
-      <span class="slot-label">foto producto destacado — Candado XL</span>
-      <span class="featured-badge">PRODUCTO DESTACADO</span>
+      @if (featuredImage()) {
+        <img [src]="featuredImage()" [alt]="featuredProduct()?.name ?? 'Producto destacado'" />
+      } @else {
+        <span class="slot-label">{{ featuredProduct()?.name ?? '' }}</span>
+      }
+      @if (featuredProduct()?.soldOut) {
+        <div class="sold">
+          <div class="sold-stamp" [style.-webkit-mask-image]="soldMask" [style.mask-image]="soldMask">
+            <div class="sold-text">SOLD OUT</div>
+          </div>
+        </div>
+      }
+      @if (featuredProduct()) {
+        <span class="featured-badge">PRODUCTO DESTACADO</span>
+      }
       <div class="chain-layer" data-chains="feat"></div>
     </div>
     <div class="featured-info">
-      <span class="kicker red">03 / SI NO LO TENÉS</span>
-      <h2 data-reveal>CANDADO<br />XL</h2>
-      <p class="lede">El que todas te van a preguntar dónde lo compraste.</p>
-      <div class="price-row">
-        <span class="price">$21.900</span>
-        <div class="countdown">
-          <span>EL DROP CIERRA EN</span>
-          <span #cdEl class="chip">00:00:00</span>
+      @if (featured()?.kicker; as kicker) {
+        <span class="kicker red">{{ kicker }}</span>
+      }
+      @if (featuredNameLines(); as lines) {
+        @if (lines.length) {
+          <h2 data-reveal>
+            @for (line of lines; track $index) {
+              @if ($index > 0) {
+                <br />
+              }
+              {{ line }}
+            }
+          </h2>
+        }
+      }
+      @if (featured()?.lede) {
+        <p class="lede">{{ featured()?.lede }}</p>
+      }
+      @if (featuredProduct(); as fp) {
+        <div class="price-row">
+          <span class="price">{{ featuredPrice() }}</span>
+          @if (dropEndsAt()) {
+            <div class="countdown">
+              <span>{{ dropCode() ? dropCode() + ' CIERRA EN' : 'EL DROP CIERRA EN' }}</span>
+              <span #cdEl class="chip">00:00:00</span>
+            </div>
+          }
         </div>
-      </div>
-      <div class="stock">
-        <div class="stock-meta"><span class="red">QUEDAN 04</span><span>04 / 30</span></div>
-        <div class="stock-bar"><div></div></div>
-      </div>
-      <div class="specs">
-        <span>MATERIAL</span><span>Metal hipoalergénico, acabado plateado</span>
-        <span>LARGO</span><span>45 cm + 5 cm extensión</span>
-        <span>CADENA</span><span>Barbada 8 mm</span>
-      </div>
-      <div class="featured-ctas">
-        <a class="btn-wa shine-sweep" [href]="catalog.waFeatured" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="350">
-          <span>LO QUIERO POR WHATSAPP</span><span>↗</span>
-        </a>
-        <a class="btn-ig shine-sweep" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="700">VER EN IG</a>
-      </div>
+        @if (stockRemaining() != null && stockTotal() != null) {
+          <div class="stock">
+            <div class="stock-meta">
+              <span class="red">QUEDAN {{ stockRemainingLabel() }}</span>
+              <span>{{ stockRatioLabel() }}</span>
+            </div>
+            <div class="stock-bar"><div [style.width.%]="stockBarPct()"></div></div>
+          </div>
+        }
+        @if (fp.description.length) {
+          <div class="specs">
+            @for (line of fp.description; track $index) {
+              <span>{{ $index + 1 }}</span><span>{{ line }}</span>
+            }
+          </div>
+        }
+        <div class="featured-ctas">
+          @if (featuredWa()) {
+            <a class="btn-wa shine-sweep" [href]="featuredWa()" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="350">
+              <span>{{ featuredCta() }}</span><span>↗</span>
+            </a>
+          }
+          @if (igHref()) {
+            <a class="btn-ig shine-sweep" [href]="igHref()" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="700">VER EN IG</a>
+          }
+        </div>
+      }
     </div>
   </section>
 
@@ -168,26 +239,42 @@
           <span #rotEl class="look-rot"><span>book</span></span>
         </h2>
       </div>
-      <span class="look-credit">FOTOS: TU EQUIPO ACÁ / ESTILISMO: ACÁ</span>
+      @if (lookbookCredit()) {
+        <span class="look-credit">{{ lookbookCredit() }}</span>
+      }
     </div>
     <div class="look-collage">
-      <div class="look look-1" data-speed="0.12"><span class="slot-label">look 01</span><span class="look-tag">LOOK 01</span></div>
-      <div class="look look-2" data-speed="-0.2"><span class="slot-label">look 02</span><span class="look-tag">LOOK 02</span></div>
-      <div class="look look-3" data-speed="0.28"><span class="slot-label">look 03</span><span class="look-tag">LOOK 03</span></div>
-      <div class="look look-4" data-speed="-0.1"><span class="slot-label">look 04</span><span class="look-tag">LOOK 04</span></div>
-      <div class="look look-5" data-speed="0.2"><span class="slot-label">look 05 — horizontal</span><span class="look-tag">LOOK 05</span></div>
-      <div class="look look-6" data-speed="-0.24"><span class="slot-label">look 06</span><span class="look-tag">LOOK 06</span></div>
-      <span class="word-brillo silver-text" data-x="0.35" data-shine="card" data-shine-delay="600">BRILLO</span>
-      <span class="word-piel" data-x="-0.25">sobre la piel</span>
-      <span class="word-noche" data-x="0.2">DE NOCHE</span>
+      @for (slot of lookSlots(); track slot.n) {
+        <div [class]="'look look-' + slot.n" [attr.data-speed]="slot.speed">
+          @if (slot.item; as look) {
+            @if (lookUrl(look)) {
+              <img [src]="lookUrl(look)" [alt]="look.alt || look.tag || ''" />
+            }
+            @if (look.tag) {
+              <span class="look-tag">{{ look.tag }}</span>
+            }
+          }
+        </div>
+      }
+      @if (overlay1()) {
+        <span class="word-brillo silver-text" data-x="0.35" data-shine="card" data-shine-delay="600">{{ overlay1() }}</span>
+      }
+      @if (overlay2()) {
+        <span class="word-piel" data-x="-0.25">{{ overlay2() }}</span>
+      }
+      @if (overlay3()) {
+        <span class="word-noche" data-x="0.2">{{ overlay3() }}</span>
+      }
     </div>
   </section>
 
   <section class="band band-2" data-screen-label="Banda 2">
     <div class="band-inner band-inner-stroke">
       <div class="marquee display-110 stroke" data-marquee="-1.4">
-        <span>FOMO FOMO FOMO FOMO FOMO FOMO FOMO FOMO</span>
-        <span>FOMO FOMO FOMO FOMO FOMO FOMO FOMO FOMO</span>
+        @if (band2Text()) {
+          <span>{{ band2Text() }}</span>
+          <span>{{ band2Text() }}</span>
+        }
       </div>
     </div>
     <div class="chain-layer" data-cross="0.75,0.3"></div>
@@ -196,35 +283,49 @@
   <section class="community" data-screen-label="Comunidad">
     <div class="section-head">
       <div class="section-kicker-wrap">
-        <span class="kicker red">05 / #FOMOFF</span>
-        <a class="ig-title" [href]="catalog.igHref" target="_blank" rel="noopener" data-reveal>@{{ catalog.igName }}<span class="letter-block">{{ catalog.igExt }}</span></a>
+        <span class="kicker red">05 / {{ hashtag() }}</span>
+        @if (igHref()) {
+          <a class="ig-title" [href]="igHref()" target="_blank" rel="noopener" data-reveal>@{{ igParts().name }}<span class="letter-block">{{ igParts().ext }}</span></a>
+        }
       </div>
-      <p class="lede">Subí tu <span class="letter-block">foto</span> y etiquetanos. <strong>#FOMOFF</strong></p>
+      <p class="lede">Subí tu <span class="letter-block">foto</span> y etiquetanos. <strong>{{ hashtag() }}</strong></p>
     </div>
     <div class="ig-grid">
-      @for (t of catalog.igTiles; track t.slot) {
-        <div class="ig-tile">
-          <span class="slot-label">{{ t.ph }}</span>
-        </div>
+      @for (t of igTiles(); track t.url) {
+        @if (igPostHref(t.permalink); as href) {
+          <a class="ig-tile" [href]="href" target="_blank" rel="noopener">
+            <img [src]="assetUrl(t.url)" [alt]="t.alt || ''" />
+          </a>
+        } @else {
+          <div class="ig-tile">
+            <img [src]="assetUrl(t.url)" [alt]="t.alt || ''" />
+          </div>
+        }
       }
     </div>
   </section>
 
   <section id="contacto" class="contact" data-screen-label="Contacto">
     <div class="chain-layer" data-chains="contact"></div>
-    <span class="kicker">06 / ESCRIBINOS</span>
+    <span class="kicker">06 @if (contactKicker()) { / {{ contactKicker() }} }</span>
     <h2 data-reveal>¿TE DA FOMO?<br /><em>escribinos.</em></h2>
     <div class="contact-links">
-      <a class="shine-sweep" [href]="catalog.waGeneral" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1050">
-        <span>WHATSAPP</span><span>↗</span>
-      </a>
-      <a class="shine-sweep" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1400">
-        <span>INSTAGRAM</span><span>↗</span>
-      </a>
+      @if (waGeneral()) {
+        <a class="shine-sweep" [href]="waGeneral()" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1050">
+          <span>{{ contactHeadline() || 'WHATSAPP' }}</span><span>↗</span>
+        </a>
+      }
+      @if (igHref()) {
+        <a class="shine-sweep" [href]="igHref()" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1400">
+          <span>INSTAGRAM</span><span>↗</span>
+        </a>
+      }
     </div>
     <div class="contact-meta">
-      <span>RESPONDEMOS EN EL DÍA</span>
-      <span>© 2026 FOMO</span>
+      <span>{{ responseSla() }}</span>
+      @if (copyrightText()) {
+        <span>{{ copyrightLine() }}</span>
+      }
     </div>
     <div class="mega silver-text" data-speed="-0.08" data-shine="card" data-shine-delay="900">FOMO</div>
   </section>
@@ -234,10 +335,14 @@
   @if (mobile()) {
     <div class="mobile-spacer"></div>
     <div class="mobile-bar">
-      <a class="shine-sweep" [href]="catalog.waGeneral" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1750">
-        <span>PEDÍ POR WHATSAPP</span><span>↗</span>
-      </a>
-      <a class="mobile-ig" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="card" data-shine-delay="600">IG</a>
+      @if (waGeneral()) {
+        <a class="shine-sweep" [href]="waGeneral()" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1750">
+          <span>PEDÍ POR WHATSAPP</span><span>↗</span>
+        </a>
+      }
+      @if (igHref()) {
+        <a class="mobile-ig" [href]="igHref()" target="_blank" rel="noopener" data-shine="card" data-shine-delay="600">IG</a>
+      }
     </div>
   }
 </div>

@@ -1,0 +1,4 @@
+{
+  "apiBaseUrl": "https://api.example.com/api/public",
+  "assetBaseUrl": "https://api.example.com"
+}

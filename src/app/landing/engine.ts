@@ -354,7 +354,8 @@ export class FomoRuntime {
       intensity: api.intensity ?? 8,
       chains: api.chains !== false,
       sparkles: api.sparkles !== false,
-      lookWords: api.lookWords ?? 'BOOK, FOMO, NOCHE, DIVA, TOTAL',
+      lookWords: api.lookWords ?? '',
+      endsAt: api.endsAt ?? null,
     };
     this.rootRef = { get current() { return api.root(); } };
     this.rotRef = { get current() { return api.rot(); } };
@@ -396,10 +397,20 @@ export class FomoRuntime {
         { duration: 2600, delay: +(el.dataset.shineDelay || (card ? 0 : 120)), iterations: Infinity, easing: 'cubic-bezier(.45,0,.2,1)' });
     });
   }
+  setLookWords(words) {
+    this.props.lookWords = words ?? this.props.lookWords;
+    clearInterval(this.rotIv);
+    this.startRotator();
+  }
+  setEndsAt(iso) {
+    this.props.endsAt = iso || null;
+    this.tick();
+  }
   startRotator() {
     const box = this.rotRef.current; if (!box) return;
-    const words = (this.props.lookWords ?? 'BOOK, FOMO, NOCHE, DIVA, TOTAL').split(',').map(s => s.trim()).filter(Boolean);
-    let i = 0; const inner = box.firstElementChild;
+    const words = (this.props.lookWords ?? '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!words.length) return;
+    let i = 0; const inner = box.firstElementChild; if (!inner) return;
     const fit = () => { box.style.width = inner.getBoundingClientRect().width + 'px'; };
     fit();
     this.rotIv = setInterval(async () => {
@@ -439,8 +450,12 @@ export class FomoRuntime {
   }
   tick() {
     const el = this.cdRef.current; if (!el) return;
-    const now = new Date(), end = new Date(now); end.setHours(24, 0, 0, 0);
-    let s = Math.max(0, Math.floor((end - now) / 1000)); const p = v => String(v).padStart(2, '0');
+    const iso = this.props.endsAt;
+    if (!iso) return;
+    const end = new Date(iso);
+    if (Number.isNaN(end.getTime())) return;
+    let s = Math.max(0, Math.floor((end - Date.now()) / 1000));
+    const p = v => String(v).padStart(2, '0');
     el.textContent = `${p(Math.floor(s / 3600))}:${p(Math.floor(s % 3600 / 60))}:${p(s % 60)}`;
   }
   intro() {

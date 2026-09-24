@@ -12,7 +12,11 @@
       <div class="cart-lines">
         @for (line of cart.lines(); track line.id) {
           <div class="cart-line">
-            <div class="cart-thumb slot slot-light"></div>
+            <div class="cart-thumb slot slot-light">
+              @if (line.imageUrl) {
+                <img [src]="line.imageUrl" [alt]="line.name" />
+              }
+            </div>
             <div class="cart-line-info">
               <span class="cart-line-name">{{ line.name }}</span>
               <div class="cart-line-row">
@@ -32,17 +36,19 @@
         <span>SUBTOTAL</span>
         <span>{{ cart.totalLabel() }}</span>
       </div>
-      <a
-        class="cta-primary shine-sweep"
-        [href]="cart.checkoutHref()"
-        target="_blank"
-        rel="noopener"
-        data-shine="sweep"
-        data-shine-delay="0"
-      >
-        <span>FINALIZAR POR WHATSAPP</span>
-        <span>↗</span>
-      </a>
+      @if (cart.checkoutHref()) {
+        <a
+          class="cta-primary shine-sweep"
+          [href]="cart.checkoutHref()"
+          target="_blank"
+          rel="noopener"
+          data-shine="sweep"
+          data-shine-delay="0"
+        >
+          <span>FINALIZAR POR WHATSAPP</span>
+          <span>↗</span>
+        </a>
+      }
       <button type="button" class="btn-outline cart-clear" (click)="cart.empty()">VACIAR CARRITO</button>
     }
   </aside>
