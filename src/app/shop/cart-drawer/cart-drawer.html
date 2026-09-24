@@ -1,0 +1,49 @@
+@if (cart.open()) {
+  <div class="drawer-overlay" (click)="cart.closeCart()"></div>
+  <aside class="drawer drawer-cart" role="dialog" aria-label="Carrito">
+    <div class="drawer-head">
+      <h2>CARRITO</h2>
+      <button type="button" class="drawer-close" (click)="cart.closeCart()" aria-label="Cerrar">✕</button>
+    </div>
+
+    @if (cart.lines().length === 0) {
+      <p class="cart-empty">TODAVÍA NO AGREGASTE NADA.</p>
+    } @else {
+      <div class="cart-lines">
+        @for (line of cart.lines(); track line.id) {
+          <div class="cart-line">
+            <div class="cart-thumb slot slot-light"></div>
+            <div class="cart-line-info">
+              <span class="cart-line-name">{{ line.name }}</span>
+              <div class="cart-line-row">
+                <div class="qty-mini">
+                  <button type="button" (click)="cart.changeQty(line.id, -1)">−</button>
+                  <span>{{ line.qty }}</span>
+                  <button type="button" class="qty-plus" (click)="cart.changeQty(line.id, 1)">+</button>
+                </div>
+                <span>{{ line.lineTotal }}</span>
+              </div>
+            </div>
+            <button type="button" class="cart-remove" (click)="cart.remove(line.id)">QUITAR</button>
+          </div>
+        }
+      </div>
+      <div class="cart-subtotal">
+        <span>SUBTOTAL</span>
+        <span>{{ cart.totalLabel() }}</span>
+      </div>
+      <a
+        class="cta-primary shine-sweep"
+        [href]="cart.checkoutHref()"
+        target="_blank"
+        rel="noopener"
+        data-shine="sweep"
+        data-shine-delay="0"
+      >
+        <span>FINALIZAR POR WHATSAPP</span>
+        <span>↗</span>
+      </a>
+      <button type="button" class="btn-outline cart-clear" (click)="cart.empty()">VACIAR CARRITO</button>
+    }
+  </aside>
+}

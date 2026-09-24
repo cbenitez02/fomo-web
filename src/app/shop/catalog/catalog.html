@@ -1,0 +1,133 @@
+<div #rootEl class="fomo-shop">
+  <fomo-navbar [shop]="true" active="catalogo" [desktop]="desktop()" />
+
+  <section class="cat-head" data-screen-label="Header catálogo" data-sp="4">
+    <div class="cat-head-row">
+      <div class="cat-kicker">
+        <span><a routerLink="/">FOMO</a> / CATÁLOGO</span>
+        <h1 class="cat-title">CATÁLOGO</h1>
+      </div>
+    </div>
+  </section>
+
+  <section class="cat-controls">
+    <button type="button" class="filters-btn" (click)="drawerOpen.set(true)">
+      <span>FILTROS +</span>
+      @if (activeFilterCount() > 0) {
+        <span class="filter-badge">{{ activeFilterCount() }}</span>
+      }
+    </button>
+    <div class="sort-wrap">
+      <label for="sortSel">ORDENAR</label>
+      <select id="sortSel" class="sort-select" [value]="sort()" (change)="onSort($event)">
+        <option value="novedad">NOVEDAD</option>
+        <option value="precio-asc">PRECIO: MENOR A MAYOR</option>
+        <option value="precio-desc">PRECIO: MAYOR A MENOR</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="cat-grid-wrap" data-screen-label="Grilla" data-sp="7">
+    @if (items().length) {
+      <div class="cat-grid">
+        @for (p of items(); track p.id) {
+          <article class="shop-card">
+            <div class="card-meta">
+              <span>N°{{ p.num }}</span>
+              @if (p.tag) {
+                <span class="tag">{{ p.tag }}</span>
+              }
+            </div>
+            <a class="shop-card-media slot slot-light" [routerLink]="['/producto', p.id]">
+              <span class="slot-label">{{ p.name }}</span>
+              @if (p.soldOut) {
+                <div class="sold">
+                  <div class="sold-stamp" [style.-webkit-mask-image]="soldMask" [style.mask-image]="soldMask">
+                    <div class="sold-text">SOLD OUT</div>
+                  </div>
+                </div>
+              }
+            </a>
+            <div class="shop-card-info">
+              <span class="shop-card-cat">{{ p.categoryLabel }}</span>
+              <div class="shop-card-row">
+                <h3>{{ p.name }}</h3>
+                <span class="price">{{ p.priceLabel }}</span>
+              </div>
+            </div>
+            @if (p.soldOut) {
+              <a class="ver-producto shop-card-foot sold-only" [routerLink]="['/producto', p.id]">
+                <span>VER PRODUCTO</span><span>→</span>
+              </a>
+            } @else {
+              <div class="shop-card-foot">
+                <a class="ver-producto" [routerLink]="['/producto', p.id]">
+                  <span>VER PRODUCTO</span><span>→</span>
+                </a>
+                <button type="button" class="add-btn" (click)="addToCart(p.id)" aria-label="Agregar al carrito">+</button>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <div class="shop-foot">
+    <span>RESPONDEMOS EN EL DÍA</span>
+    <a routerLink="/">← VOLVER AL INICIO</a>
+    <span>© 2026 FOMO</span>
+  </div>
+  <fomo-flaaps />
+
+  @if (drawerOpen()) {
+    <div class="drawer-overlay" (click)="drawerOpen.set(false)"></div>
+    <aside class="drawer drawer-filters" role="dialog" aria-label="Filtros">
+      <div class="drawer-head">
+        <h2>FILTROS</h2>
+        <button type="button" class="drawer-close" (click)="drawerOpen.set(false)" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="filter-block">
+        <span class="filter-label">CATEGORÍA</span>
+        <div class="chip-row">
+          <button type="button" class="chip" [class.on]="cats().anillo" (click)="toggleCat('anillo')">
+            {{ cats().anillo ? '✓ ' : '' }}ANILLOS
+          </button>
+          <button type="button" class="chip" [class.on]="cats().collar" (click)="toggleCat('collar')">
+            {{ cats().collar ? '✓ ' : '' }}COLLARES
+          </button>
+        </div>
+      </div>
+      <div class="filter-block">
+        <span class="filter-label">DISPONIBILIDAD</span>
+        <div class="seg">
+          <button type="button" [class.on]="avail() === 'all'" (click)="setAvail('all')">TODOS</button>
+          <button type="button" [class.on]="avail() === 'stock'" (click)="setAvail('stock')">CON STOCK</button>
+          <button type="button" [class.on]="avail() === 'soldout'" (click)="setAvail('soldout')">AGOTADOS</button>
+        </div>
+      </div>
+      <div class="filter-block">
+        <span class="filter-label">PRECIO</span>
+        <span class="price-until">HASTA {{ maxPriceLabel() }}</span>
+        <input
+          class="price-range"
+          type="range"
+          [min]="priceMin"
+          [max]="priceMax"
+          [step]="priceStep"
+          [value]="maxPrice()"
+          (input)="onMaxPrice($event)"
+        />
+      </div>
+      <div class="drawer-actions">
+        <button type="button" class="btn-outline" (click)="clearFilters()">LIMPIAR FILTROS</button>
+        <button type="button" class="cta-primary" (click)="drawerOpen.set(false)">
+          <span>VER {{ items().length }} PRODUCTOS</span>
+          <span>→</span>
+        </button>
+      </div>
+    </aside>
+  }
+
+  <fomo-cart-drawer />
+</div>

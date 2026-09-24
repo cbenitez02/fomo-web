@@ -1,0 +1,130 @@
+<div #rootEl class="fomo-shop">
+  <fomo-navbar [shop]="true" active="" [desktop]="desktop()" />
+
+  @if (current(); as p) {
+    <section class="crumb">
+      <a routerLink="/">FOMO</a>
+      <span>/</span>
+      <a routerLink="/catalogo">CATÁLOGO</a>
+      <span>/</span>
+      <span class="crumb-now">{{ p.name }}</span>
+    </section>
+
+    <section class="pdp" data-sp="5">
+      <div class="pdp-gallery">
+        <div class="pdp-main slot slot-light">
+          <span class="slot-label">{{ p.name }} — foto principal</span>
+          @if (p.soldOut) {
+            <div class="sold">
+              <div class="sold-stamp" [style.-webkit-mask-image]="soldMask" [style.mask-image]="soldMask">
+                <div class="sold-text">SOLD OUT</div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="pdp-thumbs">
+          <div class="pdp-thumb slot slot-light hot"><span class="slot-label">Ángulo 2</span></div>
+          <div class="pdp-thumb slot slot-light"><span class="slot-label">Ángulo 3</span></div>
+          <div class="pdp-thumb slot slot-light"><span class="slot-label">Detalle</span></div>
+        </div>
+      </div>
+
+      <div class="pdp-info">
+        <div class="pdp-meta">
+          <span>N°{{ p.num }} / {{ p.categoryLabel }}</span>
+          @if (p.tag) {
+            <span class="tag">{{ p.tag }}</span>
+          }
+        </div>
+        <h1 class="pdp-name">{{ p.name }}</h1>
+        <span class="pdp-price">{{ p.priceLabel }}</span>
+
+        @if (p.limited) {
+          <div class="drop-cd">
+            <span>EL DROP CIERRA EN</span>
+            <span class="cd-chip">{{ countdown() }}</span>
+          </div>
+        }
+
+        <div class="detail-table">
+          <span class="detail-head">DETALLE</span>
+          @for (d of p.desc; track d) {
+            <span class="detail-row">{{ d }}</span>
+          }
+        </div>
+
+        @if (p.soldOut) {
+          <div class="sold-banner">
+            AGOTADO. NO REPONEMOS, PERO ESCRIBINOS Y TE AVISAMOS DEL PRÓXIMO DROP.
+          </div>
+        } @else {
+          <div class="buy-block">
+            <div class="qty-pdp">
+              <button type="button" (click)="decQty()" aria-label="Menos">−</button>
+              <span>{{ qty() }}</span>
+              <button type="button" class="qty-plus" (click)="incQty()" aria-label="Más">+</button>
+            </div>
+            <button type="button" class="add-cart-cta" (click)="addToCart()">
+              <span>AGREGAR AL CARRITO</span>
+              <span>+</span>
+            </button>
+          </div>
+        }
+
+        <div class="pdp-ctas">
+          <a
+            class="cta-primary cta-wa shine-sweep"
+            [href]="p.wa"
+            target="_blank"
+            rel="noopener"
+            data-shine="sweep"
+            data-shine-delay="350"
+          >
+            <span>LO QUIERO POR WHATSAPP</span>
+            <span>↗</span>
+          </a>
+          <a
+            class="cta-ig shine-sweep"
+            [href]="igHref"
+            target="_blank"
+            rel="noopener"
+            data-shine="sweep"
+            data-shine-delay="700"
+          >
+            VER EN IG
+          </a>
+        </div>
+      </div>
+    </section>
+
+    @if (related().length) {
+      <section class="related" data-screen-label="Relacionados" data-sp="6">
+        <span class="related-kicker">MISMA CATEGORÍA</span>
+        <h2>TAMBIÉN TE<br />PUEDE DAR FOMO</h2>
+        <div class="related-grid">
+          @for (r of related(); track r.id) {
+            <a class="related-card" [routerLink]="['/producto', r.id]">
+              <div class="related-media slot slot-dark">
+                <span class="slot-label">{{ r.name }}</span>
+              </div>
+              <div class="related-info">
+                <span class="name">{{ r.name }}</span>
+                <span class="price">{{ r.priceLabel }}</span>
+              </div>
+              <span class="related-foot"><span>VER PRODUCTO</span><span>→</span></span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  }
+
+  <div class="shop-foot">
+    <span>RESPONDEMOS EN EL DÍA</span>
+    <a routerLink="/">← VOLVER AL INICIO</a>
+    <span>© 2026 FOMO</span>
+  </div>
+  <fomo-flaaps />
+
+  <fomo-cart-drawer />
+</div>

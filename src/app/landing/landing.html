@@ -1,0 +1,243 @@
+<div #rootEl class="fomo">
+  <fomo-navbar [desktop]="!mobile()" />
+
+  <section class="hero" data-screen-label="Hero">
+    <div class="hero-meta">
+      <span>ANILLOS &amp; COLLARES</span>
+      <span>ROSARIO — ARG</span>
+    </div>
+
+    <div class="hero-title">
+      <span data-intro data-speed="0.08" data-shine="card" data-shine-delay="0">F</span>
+      <span data-intro data-speed="-0.12" data-shine="card" data-shine-delay="160">O</span>
+      <span data-intro data-speed="0.16" data-shine="card" data-shine-delay="320">M</span>
+      <span data-intro data-speed="-0.06" data-shine="card" data-shine-delay="480">O</span>
+    </div>
+
+    <div class="hero-copy">
+      <div class="hero-slogans">
+        <span data-intro>LO VES.</span>
+        <span data-intro class="outline">LO QUERÉS.</span>
+        <span data-intro>NO LO TENÉS.</span>
+        <span data-intro class="fomo-sticker">…Y TE DA FOMO.</span>
+      </div>
+    </div>
+    <div class="chain-layer" data-chains="hero"></div>
+  </section>
+
+  <section class="band band-1" data-screen-label="Banda 1">
+    <div class="band-inner band-inner-dark">
+      <div class="marquee display-64" data-marquee="1.8">
+        <span>ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕ ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕</span>
+        <span>ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕ ANILLOS <em>&amp;</em> COLLARES ✕ BRILLO ✕ ACTITUD ✕</span>
+      </div>
+    </div>
+    <div class="chain-layer" data-cross="0.2,0.8"></div>
+  </section>
+
+  <section id="anillos" class="rings" data-screen-label="Anillos">
+    <div class="section-head">
+      <div class="section-kicker-wrap">
+        <span class="kicker red">01 / SI LO VES</span>
+        <div class="title-orbit">
+          <h2 data-reveal>ANILLOS</h2>
+          <div class="orbit" data-orbit="-7" data-kind="rings"></div>
+        </div>
+      </div>
+      <p class="lede">Uno solo dice algo. Cinco juntos <span class="letter-block">dicen todo.</span></p>
+    </div>
+
+    <div class="ring-grid">
+      @for (r of catalog.rings; track r.num) {
+        <article class="product-card">
+          <div class="card-meta">
+            <span>N°{{ r.num }}</span>
+            <span class="tag">{{ r.tag }}</span>
+          </div>
+          <div class="slot slot-light">
+            <span class="slot-label">{{ r.ph }}</span>
+            @if (r.soldOut) {
+              <div class="sold">
+                <div class="sold-stamp" [style.-webkit-mask-image]="soldMask" [style.mask-image]="soldMask">
+                  <div class="sold-text">SOLD OUT</div>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="card-info">
+            <h3>{{ r.name }}</h3>
+            <span>{{ r.price }}</span>
+          </div>
+          <a class="card-cta" [href]="r.wa" target="_blank" rel="noopener">
+            <span>{{ r.cta }}</span><span>→</span>
+          </a>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section id="collares" class="necks" data-screen-label="Collares">
+    <div class="necks-inner">
+      <div class="necks-head">
+        <div>
+          <span class="kicker">02 / SI LO QUERÉS</span>
+          <div class="title-orbit title-orbit-sm">
+            <h2 class="silver-text" data-shine="card" data-shine-delay="300">COLLARES</h2>
+            <div class="orbit" data-orbit="5"></div>
+          </div>
+        </div>
+        <div class="slider-btns">
+          <button type="button" aria-label="Anterior" (click)="slide(-1)">←</button>
+          <button type="button" class="next" aria-label="Siguiente" (click)="slide(1)">→</button>
+        </div>
+      </div>
+
+      <div #trackEl class="track" (pointerdown)="dragStart($event)">
+        <div class="intro-card">
+          <p>Cadenas que se escuchan antes de verse.</p>
+          <span>6 MODELOS — TIRADA CORTA</span>
+        </div>
+        @for (n of catalog.necklaces; track n.num) {
+          <article class="neck-card">
+            <div class="neck-meta">
+              <span>N°{{ n.num }}</span><span>{{ n.tag }}</span>
+            </div>
+            <div class="slot slot-dark neck-photo">
+              <span class="slot-label">{{ n.ph }}</span>
+            </div>
+            <div class="neck-info">
+              <h3>{{ n.name }}</h3>
+              <span>{{ n.price }}</span>
+            </div>
+            <a class="neck-cta" [href]="n.wa" target="_blank" rel="noopener">
+              <span>LO QUIERO</span><span>→</span>
+            </a>
+          </article>
+        }
+        <a class="ig-card" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="card">
+          <span class="ig-card-text" data-shine="text">VER TODO EN IG ↗</span>
+        </a>
+      </div>
+      <div class="progress">
+        <div #barEl class="progress-bar"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured" data-screen-label="Destacado">
+    <div class="featured-photo">
+      <span class="slot-label">foto producto destacado — Candado XL</span>
+      <span class="featured-badge">PRODUCTO DESTACADO</span>
+      <div class="chain-layer" data-chains="feat"></div>
+    </div>
+    <div class="featured-info">
+      <span class="kicker red">03 / SI NO LO TENÉS</span>
+      <h2 data-reveal>CANDADO<br />XL</h2>
+      <p class="lede">El que todas te van a preguntar dónde lo compraste.</p>
+      <div class="price-row">
+        <span class="price">$21.900</span>
+        <div class="countdown">
+          <span>EL DROP CIERRA EN</span>
+          <span #cdEl class="chip">00:00:00</span>
+        </div>
+      </div>
+      <div class="stock">
+        <div class="stock-meta"><span class="red">QUEDAN 04</span><span>04 / 30</span></div>
+        <div class="stock-bar"><div></div></div>
+      </div>
+      <div class="specs">
+        <span>MATERIAL</span><span>Metal hipoalergénico, acabado plateado</span>
+        <span>LARGO</span><span>45 cm + 5 cm extensión</span>
+        <span>CADENA</span><span>Barbada 8 mm</span>
+      </div>
+      <div class="featured-ctas">
+        <a class="btn-wa shine-sweep" [href]="catalog.waFeatured" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="350">
+          <span>LO QUIERO POR WHATSAPP</span><span>↗</span>
+        </a>
+        <a class="btn-ig shine-sweep" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="700">VER EN IG</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="lookbook" class="lookbook" data-screen-label="Lookbook">
+    <div class="look-head">
+      <div>
+        <span class="kicker">04 / TE DA FOMO</span>
+        <h2 data-reveal>
+          <span>LOOK</span>
+          <span #rotEl class="look-rot"><span>book</span></span>
+        </h2>
+      </div>
+      <span class="look-credit">FOTOS: TU EQUIPO ACÁ / ESTILISMO: ACÁ</span>
+    </div>
+    <div class="look-collage">
+      <div class="look look-1" data-speed="0.12"><span class="slot-label">look 01</span><span class="look-tag">LOOK 01</span></div>
+      <div class="look look-2" data-speed="-0.2"><span class="slot-label">look 02</span><span class="look-tag">LOOK 02</span></div>
+      <div class="look look-3" data-speed="0.28"><span class="slot-label">look 03</span><span class="look-tag">LOOK 03</span></div>
+      <div class="look look-4" data-speed="-0.1"><span class="slot-label">look 04</span><span class="look-tag">LOOK 04</span></div>
+      <div class="look look-5" data-speed="0.2"><span class="slot-label">look 05 — horizontal</span><span class="look-tag">LOOK 05</span></div>
+      <div class="look look-6" data-speed="-0.24"><span class="slot-label">look 06</span><span class="look-tag">LOOK 06</span></div>
+      <span class="word-brillo silver-text" data-x="0.35" data-shine="card" data-shine-delay="600">BRILLO</span>
+      <span class="word-piel" data-x="-0.25">sobre la piel</span>
+      <span class="word-noche" data-x="0.2">DE NOCHE</span>
+    </div>
+  </section>
+
+  <section class="band band-2" data-screen-label="Banda 2">
+    <div class="band-inner band-inner-stroke">
+      <div class="marquee display-110 stroke" data-marquee="-1.4">
+        <span>FOMO FOMO FOMO FOMO FOMO FOMO FOMO FOMO</span>
+        <span>FOMO FOMO FOMO FOMO FOMO FOMO FOMO FOMO</span>
+      </div>
+    </div>
+    <div class="chain-layer" data-cross="0.75,0.3"></div>
+  </section>
+
+  <section class="community" data-screen-label="Comunidad">
+    <div class="section-head">
+      <div class="section-kicker-wrap">
+        <span class="kicker red">05 / #FOMOFF</span>
+        <a class="ig-title" [href]="catalog.igHref" target="_blank" rel="noopener" data-reveal>@{{ catalog.igName }}<span class="letter-block">{{ catalog.igExt }}</span></a>
+      </div>
+      <p class="lede">Subí tu <span class="letter-block">foto</span> y etiquetanos. <strong>#FOMOFF</strong></p>
+    </div>
+    <div class="ig-grid">
+      @for (t of catalog.igTiles; track t.slot) {
+        <div class="ig-tile">
+          <span class="slot-label">{{ t.ph }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section id="contacto" class="contact" data-screen-label="Contacto">
+    <div class="chain-layer" data-chains="contact"></div>
+    <span class="kicker">06 / ESCRIBINOS</span>
+    <h2 data-reveal>¿TE DA FOMO?<br /><em>escribinos.</em></h2>
+    <div class="contact-links">
+      <a class="shine-sweep" [href]="catalog.waGeneral" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1050">
+        <span>WHATSAPP</span><span>↗</span>
+      </a>
+      <a class="shine-sweep" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1400">
+        <span>INSTAGRAM</span><span>↗</span>
+      </a>
+    </div>
+    <div class="contact-meta">
+      <span>RESPONDEMOS EN EL DÍA</span>
+      <span>© 2026 FOMO</span>
+    </div>
+    <div class="mega silver-text" data-speed="-0.08" data-shine="card" data-shine-delay="900">FOMO</div>
+  </section>
+
+  <fomo-flaaps />
+
+  @if (mobile()) {
+    <div class="mobile-spacer"></div>
+    <div class="mobile-bar">
+      <a class="shine-sweep" [href]="catalog.waGeneral" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="1750">
+        <span>PEDÍ POR WHATSAPP</span><span>↗</span>
+      </a>
+      <a class="mobile-ig" [href]="catalog.igHref" target="_blank" rel="noopener" data-shine="card" data-shine-delay="600">IG</a>
+    </div>
+  }
+</div>

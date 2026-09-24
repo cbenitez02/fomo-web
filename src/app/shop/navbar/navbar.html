@@ -1,0 +1,32 @@
+<div id="top" class="topbar">
+  <div class="marquee" data-marquee="1.1">
+    <span>TE DA FOMO POR ALGO ✕ PEDIDOS POR WHATSAPP ✕ STOCK LIMITADO ✕ TE DA FOMO POR ALGO ✕ PEDIDOS POR WHATSAPP ✕ STOCK LIMITADO ✕</span>
+    <span aria-hidden="true">TE DA FOMO POR ALGO ✕ PEDIDOS POR WHATSAPP ✕ STOCK LIMITADO ✕ TE DA FOMO POR ALGO ✕ PEDIDOS POR WHATSAPP ✕ STOCK LIMITADO ✕</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <a class="logo" routerLink="/" (click)="goHome($event)">FOMO</a>
+  <div class="nav-links">
+    @if (shop()) {
+      <a routerLink="/" fragment="anillos">ANILLOS</a>
+      <a routerLink="/" fragment="collares">COLLARES</a>
+      <a routerLink="/catalogo" [queryParams]="{}" [class.is-active]="active() === 'catalogo'">CATÁLOGO</a>
+      <a routerLink="/" fragment="lookbook">LOOKBOOK</a>
+      <a routerLink="/" fragment="contacto">CONTACTO</a>
+      <button type="button" class="nav-cart" (click)="openCart()">
+        <span>CARRITO</span>
+        <span class="cart-badge">{{ cartCount() }}</span>
+      </button>
+    } @else {
+      <a href="#anillos">ANILLOS</a>
+      <a href="#collares">COLLARES</a>
+      <a routerLink="/catalogo">CATÁLOGO</a>
+      <a href="#lookbook">LOOKBOOK</a>
+      <a href="#contacto">CONTACTO</a>
+    }
+    @if (desktop()) {
+      <a class="nav-wa shine-sweep" [href]="waGeneral" target="_blank" rel="noopener" data-shine="sweep" data-shine-delay="0">PEDÍ POR WHATSAPP ↗</a>
+    }
+  </div>
+</nav>

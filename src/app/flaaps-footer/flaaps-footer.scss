@@ -1,0 +1,37 @@
+:host {
+  display: block;
+}
+
+.flaaps-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  z-index: 6;
+  background: #0b0b0c;
+  color: #f3f3f1;
+  border-top: 2px solid rgba(243, 243, 241, 0.22);
+  padding: 18px 4vw 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+
+  img {
+    display: block;
+    height: 26px;
+    width: auto;
+    filter: brightness(0) invert(1);
+  }
+
+  &:hover {
+    color: #d40000;
+
+    img {
+      opacity: 0.85;
+    }
+  }
+}
