@@ -25,6 +25,16 @@ npm start
 
 El collage de Home tiene **6 slots fijos** (`look-1` … `look-6`). El API devuelve todos los looks `published` ordenados por `sort_order`. La web usa los **primeros 6**. Con 0–5, los huecos quedan vacíos. Con más de 6, el resto no se muestra (siguen en admin).
 
+## CI / CD
+
+CI y deploy automático a producción: [`docs/deployment.md`](docs/deployment.md).
+
+- Rama: `master`
+- CI (PR y push a `master`): `npm ci`, tests ChromeHeadless, `npm run build`
+- CD: push a `master` con CI OK (`workflow_run`); `workflow_dispatch` no re-corre CI y exige CI verde del SHA actual de `origin/master`
+- Environment GitHub: `production`
+- En el VPS se reconstruye **solo** el servicio Compose `web`
+
 ## Production
 
 ```bash

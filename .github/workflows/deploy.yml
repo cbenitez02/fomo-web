@@ -1,0 +1,221 @@
+name: Deploy production
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: fomo-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  require-ci:
+    name: Require successful CI
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+      - name: Resolve the commit CI approved
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          CI_EVENT: ${{ github.event.workflow_run.event }}
+          CI_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          CI_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          sha=""
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)
+          elif [ "$EVENT_NAME" = "workflow_run" ]; then
+            if [ "$CI_EVENT" != "push" ] || [ "$CI_BRANCH" != "master" ]; then
+              echo "Deploy only follows a CI run for a push to master (event=${CI_EVENT}, branch=${CI_BRANCH})." >&2
+              exit 1
+            fi
+            if [ "$CI_CONCLUSION" != "success" ]; then
+              echo "CI conclusion is ${CI_CONCLUSION}. Deploy aborted." >&2
+              exit 1
+            fi
+            sha="$CI_SHA"
+          else
+            echo "Unsupported event ${EVENT_NAME}." >&2
+            exit 1
+          fi
+
+          if ! printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "Refusing deploy: SHA is not a 40-character hex commit." >&2
+            exit 1
+          fi
+
+          found=0
+          for attempt in 1 2 3 4 5 6; do
+            count=$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow ci.yml \
+              --commit "$sha" \
+              --branch master \
+              --event push \
+              --limit 20 \
+              --json conclusion,headSha,event \
+              --jq '[.[] | select(.conclusion=="success" and .headSha=="'"$sha"'" and .event=="push")] | length')
+            if [ "$count" != "0" ]; then
+              found=1
+              break
+            fi
+            echo "Waiting for the successful CI run to be visible (${attempt}/6)."
+            sleep 5
+          done
+
+          if [ "$found" != 1 ]; then
+            echo "No successful push CI run for ${sha} on master. Deploy aborted." >&2
+            exit 1
+          fi
+
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+          echo "CI approved ${sha}."
+
+  deploy:
+    name: Deploy production
+    needs: require-ci
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy web over SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          EXPECTED_SHA: ${{ needs.require-ci.outputs.sha }}
+        run: |
+          set -eu
+          : "${VPS_HOST:?VPS_HOST is required}"
+          : "${VPS_USER:?VPS_USER is required}"
+          : "${VPS_SSH_KEY:?VPS_SSH_KEY is required}"
+          : "${VPS_SSH_KNOWN_HOSTS:?VPS_SSH_KNOWN_HOSTS is required}"
+          : "${EXPECTED_SHA:?EXPECTED_SHA is required}"
+          PORT="${VPS_PORT:-22}"
+
+          if ! printf '%s' "$EXPECTED_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "EXPECTED_SHA is not a 40-character hex commit." >&2
+            exit 1
+          fi
+
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          KEYFILE="$HOME/.ssh/deploy_key"
+          printf '%s\n' "$VPS_SSH_KEY" > "$KEYFILE"
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$KEYFILE" "$HOME/.ssh/known_hosts"
+
+          if [ ! -s "$HOME/.ssh/known_hosts" ]; then
+            echo "known_hosts is missing." >&2
+            exit 1
+          fi
+
+          ssh -i "$KEYFILE" -p "$PORT" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$VPS_USER@$VPS_HOST" \
+            env EXPECTED_SHA="$EXPECTED_SHA" bash -s <<'REMOTE'
+          set -euo pipefail
+
+          fail_web() {
+            echo "Deploy failed."
+            docker inspect -f 'status={{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' fomo-web-1 || true
+            docker logs --tail 100 fomo-web-1 || true
+            exit 1
+          }
+
+          if ! printf '%s' "${EXPECTED_SHA:-}" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "EXPECTED_SHA is missing or is not a full git SHA." >&2
+            exit 1
+          fi
+
+          cd /opt/fomo/fomo-web
+
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Working tree is not clean in /opt/fomo/fomo-web"
+            git status --porcelain
+            exit 1
+          fi
+
+          git fetch origin
+          origin_master=$(git rev-parse origin/master)
+          if [ "$origin_master" != "$EXPECTED_SHA" ]; then
+            echo "origin/master is ${origin_master}. CI approved ${EXPECTED_SHA}. Refusing to deploy a different commit." >&2
+            exit 1
+          fi
+
+          git checkout master
+          git merge --ff-only "$EXPECTED_SHA"
+          head=$(git rev-parse HEAD)
+          if [ "$head" != "$EXPECTED_SHA" ]; then
+            echo "HEAD is ${head} after update. Expected ${EXPECTED_SHA}." >&2
+            exit 1
+          fi
+
+          cd /opt/fomo/app
+
+          if ! docker compose --env-file .env -f docker-compose.prod.yml config --services | grep -qx web; then
+            echo "Compose file does not define service web"
+            exit 1
+          fi
+
+          docker compose --env-file .env -f docker-compose.prod.yml up -d --build --no-deps web
+
+          elapsed=0
+          timeout=180
+          while true; do
+            health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' fomo-web-1 || true)"
+            if [ "$health" = "healthy" ]; then
+              break
+            fi
+            if [ "$elapsed" -ge "$timeout" ]; then
+              echo "Timed out waiting for fomo-web-1 to become healthy (last=$health)"
+              fail_web
+            fi
+            sleep 5
+            elapsed=$((elapsed + 5))
+          done
+
+          attempt=1
+          delay=5
+          while [ "$attempt" -le 8 ]; do
+            if curl -fsS -o /dev/null --max-time 20 https://fomooficial.shop/; then
+              echo "Production check succeeded."
+              exit 0
+            fi
+            echo "Production check failed (attempt $attempt). Retrying in ${delay}s."
+            sleep "$delay"
+            attempt=$((attempt + 1))
+            delay=$((delay * 2))
+            if [ "$delay" -gt 30 ]; then
+              delay=30
+            fi
+          done
+
+          echo "https://fomooficial.shop did not respond successfully."
+          fail_web
+          REMOTE
