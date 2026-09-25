@@ -178,8 +178,28 @@ jobs:
 
           cd /opt/fomo/app
 
-          if ! docker compose --env-file .env -f docker-compose.prod.yml config --services | grep -qx web; then
-            echo "Compose file does not define service web"
+          # No pipear config --services a grep -q: con pipefail, grep -qx cierra
+          # el pipe al encontrar web y Compose (que sigue escribiendo) sale 141.
+          # Ese estado se toma como "web no existe" aunque el servicio esté.
+          if ! compose_services=$(docker compose --env-file .env -f docker-compose.prod.yml config --services); then
+            echo "docker compose config --services failed" >&2
+            exit 1
+          fi
+
+          compose_services=${compose_services//$'\r'/}
+          has_web=0
+          services_file=$(mktemp)
+          printf '%s\n' "$compose_services" > "$services_file"
+          while IFS= read -r svc || [ -n "$svc" ]; do
+            if [ "$svc" = "web" ]; then
+              has_web=1
+            fi
+          done < "$services_file"
+          rm -f "$services_file"
+
+          if [ "$has_web" -ne 1 ]; then
+            echo "Compose file does not define service web" >&2
+            printf '%s\n' "$compose_services" >&2
             exit 1
           fi
 
